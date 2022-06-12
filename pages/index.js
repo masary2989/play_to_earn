@@ -1,8 +1,48 @@
 import Head from 'next/head'
 import Image from 'next/image'
 import styles from '../styles/Home.module.css'
+import getWeb3 from './api/web3'
+import { contractAbi, contractAddress } from './api/contractInfo'
+import { useEffect, useState } from 'react'
 
 export default function Home() {
+  const walletAddress = '0x61b12F6D46412aAe6F857FDF059E3e48D4ecF218'
+  let currentWeb3
+  let playToEarnContract
+
+  const [itemState, setItemState] = useState('');
+  const [balanceState, setBalanceState] = useState('');
+
+  useEffect(() => {
+    currentWeb3 = getWeb3()
+    console.log(currentWeb3)
+    playToEarnContract = new currentWeb3.eth.Contract(contractAbi, contractAddress)
+    console.log(playToEarnContract)
+  }, [])
+
+  // useEffect(() => {
+  //   const setInitialBalance = async () => {
+  //     let initialBalance = await currentWeb3.eth.getBalance(walletAddress)
+  //     initialBalance = currentWeb3.utils.fromWei(initialBalance, 'ether')
+  //     setBalanceState(initialBalance)
+  //   }
+  //   setInitialBalance()
+  // }, [])
+
+  const handlePayToGetTool = async () => {
+    await playToEarnContract.methods.PayToGetTool().send({from: walletAddress, value: currentWeb3.utils.toWei('0.01', 'ether')})
+    const URI = await playToEarnContract.methods.tokenURI(4).call({from: walletAddress})
+    setItemState(URI)
+    console.log(URI)
+  }
+
+  const handleWorkCompleted = async () => {
+    await playToEarnContract.methods.WorkCompleted().send({from: walletAddress})
+    const changedBalance = await currentWeb3.eth.getBalance(walletAddress)
+    changedBalance = currentWeb3.utils.fromWei(changedBalance, 'ether')
+    setBalanceState(changedBalance)
+  }
+
   return (
     <div className={styles.container}>
       <Head>
@@ -13,41 +53,26 @@ export default function Home() {
 
       <main className={styles.main}>
         <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
+          Welcome to <a href="https://ropsten.etherscan.io/address/0xF8676039BB09fbeF81F27286378c4f4FD27e3f95">PlayToEarn!</a>
         </h1>
-
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.js</code>
-        </p>
+          <p className={styles.description}>
+            残高: {balanceState}
+          </p>
+        {!!itemState && (
+          <p className={styles.description}>
+            My Housework Item is {itemState}
+          </p>
+        )}
 
         <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h2>Documentation &rarr;</h2>
-            <p>Find in-depth information about Next.js features and API.</p>
+          <a onClick={() => handlePayToGetTool()} className={styles.card}>
+            <h2>道具NFTを購入する</h2>
+            <p>家事をするために道具を購入しよう</p>
           </a>
 
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h2>Learn &rarr;</h2>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/canary/examples"
-            className={styles.card}
-          >
-            <h2>Examples &rarr;</h2>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-          >
-            <h2>Deploy &rarr;</h2>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
+          <a onClick={() => handleWorkCompleted()} className={styles.card}>
+            <h2>家事完了！</h2>
+            <p>家事が完了したら登録してイーサをもらいましょう!</p>
           </a>
         </div>
       </main>
