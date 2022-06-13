@@ -8,7 +8,6 @@ import { useEffect, useState } from 'react'
 export default function Home() {
   const walletAddress = '0x61b12F6D46412aAe6F857FDF059E3e48D4ecF218'
   let currentWeb3
-  let playToEarnContract
 
   const [itemState, setItemState] = useState('');
   const [balanceState, setBalanceState] = useState('');
@@ -16,8 +15,6 @@ export default function Home() {
   useEffect(() => {
     currentWeb3 = getWeb3()
     console.log(currentWeb3)
-    playToEarnContract = new currentWeb3.eth.Contract(contractAbi, contractAddress)
-    console.log(playToEarnContract)
   }, [])
 
   // useEffect(() => {
@@ -30,6 +27,8 @@ export default function Home() {
   // }, [])
 
   const handlePayToGetTool = async () => {
+    const playToEarnContract = new currentWeb3.eth.Contract(contractAbi, contractAddress)
+    console.log(playToEarnContract)
     await playToEarnContract.methods.PayToGetTool().send({from: walletAddress, value: currentWeb3.utils.toWei('0.01', 'ether')})
     const URI = await playToEarnContract.methods.tokenURI(4).call({from: walletAddress})
     setItemState(URI)
@@ -37,6 +36,8 @@ export default function Home() {
   }
 
   const handleWorkCompleted = async () => {
+    const playToEarnContract = new currentWeb3.eth.Contract(contractAbi, contractAddress)
+    console.log(playToEarnContract)
     await playToEarnContract.methods.WorkCompleted().send({from: walletAddress})
     const changedBalance = await currentWeb3.eth.getBalance(walletAddress)
     changedBalance = currentWeb3.utils.fromWei(changedBalance, 'ether')
